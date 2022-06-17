@@ -17,6 +17,7 @@ func Add(a bool, args []string) {
 			log.Fatal("Nothing specified, nothing added.\n Maybe you wanted to say 'dolt add .'?")
 		} else if a || len(args) == 1 && args[0] == "." {
 			//TODO: stage all data current table
+			
 		} else {
 			// TODO: stage tables
 			// roots, err = actions.StageTables(ctx, roots, docs, tables)

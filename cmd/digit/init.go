@@ -45,26 +45,26 @@ func Init(path string) {
 		}
 	}
 
-	//create dir .digit
+	// create dir .digit
 	digitPath := filepath.Join(path, ".digit")
 	err := os.Mkdir(digitPath, FILE_MODE)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//create file: config, description, HEAD
+	// create file: config, description, HEAD
 	os.Create(filepath.Join(digitPath, "config"))
 	os.Create(filepath.Join(digitPath, "description"))
 	head, _ := os.Create(filepath.Join(digitPath, "HEAD"))
 	head.Write([]byte("ref: refs/heads/master"))
 
-	//create dir: hooks, info, object, refs
+	// create dir: hooks, info, object, refs
 	os.Mkdir(filepath.Join(digitPath, "hooks"), FILE_MODE)
 	os.Mkdir(filepath.Join(digitPath, "info"), FILE_MODE)
 	os.Mkdir(filepath.Join(digitPath, "object"), FILE_MODE)
 	os.Mkdir(filepath.Join(digitPath, "refs"), FILE_MODE)
 
-	//create dir tags and heads in refs
+	// create dir tags and heads in refs
 	refsPath := filepath.Join(digitPath, "refs")
 	os.Mkdir(filepath.Join(refsPath, "tags"), FILE_MODE)
 	os.Mkdir(filepath.Join(refsPath, "heads"), FILE_MODE)

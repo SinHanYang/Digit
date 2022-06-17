@@ -17,6 +17,8 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	rootCmd.CompletionOptions.DisableDefaultCmd = true
+	rootCmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintf(os.Stderr, "Whoops. There was an error while executing your CLI '%s'", err)
 		os.Exit(1)
