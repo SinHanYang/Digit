@@ -1,22 +1,20 @@
 package main
 
-//import "fmt"
-
+import "time"
 //struct
 
 type Hash struct{
-	hash [20]byte
+	hash_value [20]byte
 	// Need to discuss hash struct details
 }
 
 type Commit struct {
 	//prev *Node
 	//next *Node
-	time string
+	time time.Time
 	author string
 	hash Hash
 	value string// type Value when sync
-
 }
 
 type Head struct{
@@ -43,7 +41,7 @@ func set_head(hash Hash){
 	Head_pt.head=hash
 }
 // new commit
-func new_commit(time string, author string, hash Hash, value string){
+func new_commit(time time.Time, author string, hash Hash, value string){
 	node:=Commit{
 		time: time,
 		author: author,

@@ -1,11 +1,15 @@
 package main
 
-import "fmt"
+import(
+     "fmt"
+     "time"
+)
 
 func main(){
     var hash Hash
-    hash.hash="1"
-    new_commit("2020","harry",hash,"abc")
+    hash.hash_value="hash"
+    t:=time.Now()
+    new_commit(t,"harry",hash,"abc")
     var ans=find_commit(hash)
-    fmt.Printf("ans:",ans.author)
+    fmt.Printf("ans:",ans.time)
 }
