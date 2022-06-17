@@ -11,9 +11,10 @@ func main() {
 	// define database name and table name
 	db_name := "KoreanShowbiz"
 	tb_name := ""
+	db_password := "" // TODO modify to your password
 
 	// connect mysql
-	db, err := sql.Open("mysql", "root:107332021@tcp(127.0.0.1:3306)/"+db_name+"?charset=utf8&parseTime=True")
+	db, err := sql.Open("mysql", "root:"+db_password+"@tcp(127.0.0.1:3306)/"+db_name+"?charset=utf8&parseTime=True")
 	if err != nil {
 		fmt.Println(err)
 		return
