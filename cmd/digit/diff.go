@@ -4,6 +4,8 @@ import "github.com/spf13/cobra"
 
 func Diff(d bool, s bool, summary bool, args []string) {
 	// TODO: Diff implement
+	// TODO if len[args] == 0 => diff current_cursor and head
+	//  others => lookup commit_graph then diff
 }
 
 var diffCmd = &cobra.Command{

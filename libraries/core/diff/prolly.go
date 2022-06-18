@@ -1,4 +1,4 @@
-package diff
+package main
 
 import "fmt"
 
@@ -23,12 +23,12 @@ type Cursor interface {
 	NextAtLevel(int)
 }
 
-type OpType int
+type OpType string
 
 const (
-	Add OpType = iota
-	Delete
-	Edit
+	Add    OpType = "ADD"
+	Delete        = "DELETE"
+	Edit          = "EDIT"
 )
 
 type Difference struct {
@@ -55,7 +55,6 @@ func Diff(left, right Cursor) []Difference {
 				fmt.Println("FastForward!")
 				FastForwardUntilUnequal(left, right)
 			} else {
-				res = append(res, Difference{Op: Edit, Value: lv})
 				res = append(res, Difference{Op: Edit, Value: rv})
 				left.Next()
 				right.Next()

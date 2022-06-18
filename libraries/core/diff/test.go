@@ -1,4 +1,4 @@
-package diff
+package main
 
 import (
 	"database/sql"
@@ -10,8 +10,8 @@ import (
 func main() {
 	// define database name and table name
 	db_name := "KoreanShowbiz"
-	tb_name := ""
-	db_password := "" // TODO modify to your password
+	tb_name := "Member"
+	db_password := "107332021" // TODO modify to your password
 
 	// connect mysql
 	db, err := sql.Open("mysql", "root:"+db_password+"@tcp(127.0.0.1:3306)/"+db_name+"?charset=utf8&parseTime=True")
@@ -49,41 +49,44 @@ func main() {
 	}
 
 	datas := readRows(rows)
-	datas1 := make([][]string, len(datas))
-	datas2 := make([][]string, len(datas))
+	orig_data := make([][]string, len(datas))
+	modified_1 := make([][]string, len(datas))
 
-	c := copy(datas1, datas)
-	c = copy(datas2, datas)
+	c := copy(orig_data, datas)
+	c = copy(modified_1, datas)
 	_ = c
-	fmt.Println(datas1[6])
-	datas1[6] = []string{"1", "2", "HI", "4", "5", "6"}
-	fmt.Println(datas1[11])
-	datas2[11] = []string{"1", "2", "XD", "4", "5", "6"}
-	datas2 = append(datas2, []string{"1", "2", "包豪斯", "4", "5", "6"})
-	// datas2 = append(datas2, []string{"1", "2", "任炫植", "4", "5", "6"})
-	test := make([]string, len(datas2[8]))
-	c = copy(test, datas2[8])
+	fmt.Println(orig_data[6])
+	orig_data[6] = []string{"1", "2", "HI", "4", "5", "6"}
+	fmt.Println(orig_data[11])
+	modified_1[11] = []string{"1", "2", "XD", "4", "5", "6"}
+	modified_1 = append(modified_1, []string{"1", "2", "包豪斯", "4", "5", "6"})
+	// modified_1 = append(modified_1, []string{"1", "2", "任炫植", "4", "5", "6"})
+	test := make([]string, len(modified_1[8]))
+	c = copy(test, modified_1[8])
 	_ = c
 	test[1] = "SHINEE"
-	datas2[8] = test
+	modified_1[8] = test
 
-	// fmt.Println(datas1)
-	// fmt.Println(datas2)
-	cursor_left := newCursor(headers, datas1)
-	cursor_right := newCursor(headers, datas2)
+	// fmt.Println(orig_data)
+	// fmt.Println(modified_1)
+	cursor_orig := newCursor(headers, orig_data)
+	cursor_modified1 := newCursor(headers, modified_1)
 
-	diff := Diff(&cursor_left, &cursor_right)
-	for _, v := range diff {
+	stage := NewStage()
 
-		if v.Op == Add {
-			fmt.Print("ADD, ")
-		} else if v.Op == Delete {
-			fmt.Print("DELETE, ")
-		} else if v.Op == Edit {
-			fmt.Print("EDIT, ")
-		}
-		fmt.Println(v.Value.GetData())
-	}
+	stage.Add(cursor_orig, cursor_modified1)
+	stage.PrintStatus()
+
+	modified_2 := append(modified_1, []string{"1", "2", "BTS", "4", "5", "6"})
+	modified_2[11] = []string{"1", "2", "XD", "4", "666", "6"}
+	cursor_modified2 := newCursor(headers, modified_2)
+
+	stage.Status(cursor_orig, cursor_modified2)
+	stage.PrintStatus()
+	stage.Add(cursor_orig, cursor_modified2)
+	stage.PrintStatus()
+	stage.Commit()
+	stage.PrintStatus()
 
 	defer db.Close()
 }

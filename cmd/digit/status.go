@@ -4,6 +4,7 @@ import "github.com/spf13/cobra"
 
 func Status(args []string) {
 	// TODO: Status implement
+	// TODO fetch the data and call diff/add.go api
 }
 
 var statusCmd = &cobra.Command{

@@ -9,6 +9,7 @@ import (
 
 func Add(a bool, args []string) {
 	//TODO: Add implement
+	// TODO: fetch data and call diff/add.go api
 	if !env.HasDigitDir("./") {
 		log.Fatal("This isn't a Digit repo, please `digit init` first.")
 	} else {

@@ -1,4 +1,4 @@
-package diff
+package main
 
 import (
 	"fmt"
@@ -49,6 +49,7 @@ type Chunk struct {
 }
 
 type ChunkCursor struct {
+	hash          ChunkAddress
 	isDone        bool
 	prollyTree    ProllyTree
 	currentChunk  Chunk
@@ -181,6 +182,7 @@ func newCursor(header []string, rows [][]string) ChunkCursor {
 		}
 	} */
 	return ChunkCursor{
+		hash:          t.headChunks[len(t.headChunks)-1].hash,
 		isDone:        false,
 		prollyTree:    t,
 		currentChunk:  t.headChunks[0],
