@@ -1,4 +1,4 @@
-package main
+package diff
 
 import (
 	"fmt"
@@ -91,6 +91,14 @@ func (cursor *ChunkCursor) Path() []ChunkAddress {
 	return l
 }
 
+func (cursor *ChunkCursor) GetHash() ChunkAddress {
+	return cursor.hash
+}
+
+func (cursor *ChunkCursor) GetTree() ProllyTree {
+	return cursor.prollyTree
+}
+
 // NextAtLevel(0) is equivalent to Next(). NextAtLevel(1) advances the cursor
 // past the current entry on the first internal level of the tree---the one
 // directly above the leaves. After advancing the cursor at an internal level,
@@ -144,7 +152,7 @@ func (cursor *ChunkCursor) NextAtLevel(level int) {
 	}
 }
 
-func newChunk(priKeys []PriKey) Chunk {
+func NewChunk(priKeys []PriKey) Chunk {
 	content := ""
 	chunkMap := make(map[ChunkAddress]PriKey, len(priKeys))
 	for i, priKey := range priKeys {
@@ -170,8 +178,8 @@ func newChunk(priKeys []PriKey) Chunk {
 
 }
 
-func newCursor(header []string, rows [][]string) ChunkCursor {
-	t := newProllyTree(header, rows)
+func NewCursor(header []string, rows [][]string) ChunkCursor {
+	t := NewProllyTree(header, rows)
 	// _ = t
 	// printProllyTree(t.tree)
 
@@ -181,6 +189,10 @@ func newCursor(header []string, rows [][]string) ChunkCursor {
 			fmt.Println(value)
 		}
 	} */
+	return NewCursorFromProllyTree(t)
+}
+
+func NewCursorFromProllyTree(t ProllyTree) ChunkCursor {
 	return ChunkCursor{
 		hash:          t.headChunks[len(t.headChunks)-1].hash,
 		isDone:        false,
@@ -188,10 +200,9 @@ func newCursor(header []string, rows [][]string) ChunkCursor {
 		currentChunk:  t.headChunks[0],
 		currentPriKey: *t.headChunks[0].headPriKey,
 	}
-	// return ChunkCursor{}
 }
 
-func newProllyTree(header []string, rows [][]string) ProllyTree {
+func NewProllyTree(header []string, rows [][]string) ProllyTree {
 
 	var newProllyTreeLevel [][]Chunk
 	// init all priKeys
@@ -230,7 +241,7 @@ func newProllyTree(header []string, rows [][]string) ProllyTree {
 		for i, priKey := range priKeys {
 			currentHashSum += rollingHash(priKey.nextLevelHash)
 			if currentHashSum >= rollingHashThreshold {
-				newChk := newChunk(priKeys[startAt : i+1])
+				newChk := NewChunk(priKeys[startAt : i+1])
 				newChunks = append(newChunks, newChk)
 				newPrikeys = append(newPrikeys,
 					PriKey{
@@ -247,7 +258,7 @@ func newProllyTree(header []string, rows [][]string) ProllyTree {
 		// fmt.Println(len(priKeys))
 
 		if startAt < len(priKeys) {
-			newChk := newChunk(priKeys[startAt:])
+			newChk := NewChunk(priKeys[startAt:])
 			newChunks = append(newChunks, newChk)
 			newPrikeys = append(newPrikeys, PriKey{
 				key:           priKeys[startAt].key,

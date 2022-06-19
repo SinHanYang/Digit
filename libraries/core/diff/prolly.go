@@ -1,4 +1,4 @@
-package main
+package diff
 
 import "fmt"
 
@@ -21,6 +21,9 @@ type Cursor interface {
 	Path() []ChunkAddress
 
 	NextAtLevel(int)
+
+	GetHash() ChunkAddress
+	GetTree() ProllyTree
 }
 
 type OpType string

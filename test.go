@@ -3,11 +3,15 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"time"
+
+	. "Digit/libraries/core/commit"
+	. "Digit/libraries/core/diff"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func main() {
+func Test() {
 	// define database name and table name
 	db_name := "KoreanShowbiz"
 	tb_name := "Member"
@@ -67,10 +71,32 @@ func main() {
 	test[1] = "SHINEE"
 	modified_1[8] = test
 
+	cg := NewCommitGraph()
+	stage := NewStage()
+
 	// fmt.Println(orig_data)
 	// fmt.Println(modified_1)
-	cursor_orig := newCursor(headers, orig_data)
-	cursor_modified1 := newCursor(headers, modified_1)
+
+	// first commit
+	cursor_orig := NewCursor(headers, orig_data)
+	cg.NewCommit(time.Now(), "Tim", Encode(cursor_orig.GetHash()), cursor_orig.GetTree(), "orig_data")
+
+	fmt.Println(cg.GetHeadCommit().Author)
+	fmt.Println(cg.GetHeadCommit().Message)
+
+	cursor_modified1 := NewCursor(headers, modified_1)
+
+	stage.Add(NewCursorFromProllyTree(cg.GetHeadCommit().Value), cursor_modified1)
+	stage.PrintStatus()
+	stage.Commit()
+	stage.PrintStatus()
+
+	/* cursor_modified1 := NewCursor(headers, modified_1)
+
+	stage.Add(cg., cursor_modified1)
+	stage.PrintStatus() */
+
+	/* cursor_modified1 := NewCursor(headers, modified_1)
 
 	stage := NewStage()
 
@@ -79,7 +105,7 @@ func main() {
 
 	modified_2 := append(modified_1, []string{"1", "2", "BTS", "4", "5", "6"})
 	modified_2[11] = []string{"1", "2", "XD", "4", "666", "6"}
-	cursor_modified2 := newCursor(headers, modified_2)
+	cursor_modified2 := NewCursor(headers, modified_2)
 
 	stage.Status(cursor_orig, cursor_modified2)
 	stage.PrintStatus()
@@ -87,6 +113,11 @@ func main() {
 	stage.PrintStatus()
 	stage.Commit()
 	stage.PrintStatus()
+
+	commit_hash := Encode(cursor_orig.GetHash())
+	fmt.Println(commit_hash)
+	fmt.Println(cursor_orig.GetHash())
+	fmt.Println(Decode(commit_hash)) */
 
 	defer db.Close()
 }

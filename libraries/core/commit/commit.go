@@ -1,81 +1,73 @@
-package main
+package commit
 
 import (
-	"time"
+	"Digit/libraries/core/diff"
 	"sort"
+	"time"
 	//"fmt"
-	//"Digit/libraries/core/diff"
 )
+
 //struct
 
 type Commit struct {
-	time time.Time
-	author string
-	hash string
-	value ProllyTree // type Value when sync
-	message string
+	Time    time.Time
+	Author  string
+	Hash    string
+	Value   diff.ProllyTree // type Value when sync
+	Message string
 }
 
-type Head struct{
-	// head record head commit's hash
-	CommitHash string //hash encode->string
-	// branch implementation
-	// parent *[]
+type CommitGraph struct {
+	commit_graph map[string]Commit
+	head_hash    string
 }
-
-//global variable
-
-var commit_graph map[string]Commit
-var Head_pt Head
 
 // functions
 
 //init map
-func init(){
-	commit_graph=make(map[string]Commit)
+func NewCommitGraph() CommitGraph {
+	return CommitGraph{
+		commit_graph: make(map[string]Commit),
+		head_hash:    "",
+	}
 }
 
 // set head
-func set_head(hash string){
-	Head_pt.CommitHash=hash
+func (cg *CommitGraph) SetHead(hash string) {
+	cg.head_hash = hash
 }
 
 // new commit
-func new_commit(time time.Time, author string, hash string, value ProllyTree, message string){
-	copyprollytree:=value
-	node:=Commit{
-		time: time,
-		author: author,
-		hash: hash,
-		value: copyprollytree,
-		message: message,
+func (cg *CommitGraph) NewCommit(time time.Time, author string, hash string, value diff.ProllyTree, message string) {
+	copyprollytree := value
+	node := Commit{
+		Time:    time,
+		Author:  author,
+		Hash:    hash,
+		Value:   copyprollytree,
+		Message: message,
 	}
 	//fmt.Printf("finish")
-	commit_graph[hash]=node
-	set_head(hash)
+	cg.commit_graph[hash] = node
+	cg.SetHead(hash)
 }
 
 // find head
-func find_head () Commit{
-	return commit_graph[Head_pt.CommitHash]
+func (cg *CommitGraph) GetHeadCommit() Commit {
+	return cg.GetCommit(cg.head_hash)
 }
 
 // find commit
-func find_commit (hash string) Commit{
-	return commit_graph[hash]
-}
-
-//reset
-func reset(hash string){
-	Head_pt.CommitHash=hash
+func (cg *CommitGraph) GetCommit(hash string) Commit {
+	return cg.commit_graph[hash]
 }
 
 // log , sort by time
-func listcommit() []Commit{
-	list:=make([]Commit,len(commit_graph))
-	for _,val :=range commit_graph{
-		list=append(list,val)
+func (cg *CommitGraph) ListCommits() []Commit {
+	list := make([]Commit, 0)
+	for _, val := range cg.commit_graph {
+		list = append(list, val)
 	}
-	sort.Slice(list, func(i, j int) bool {return list[i].time.After(list[j].time)})
+	sort.Slice(list, func(i, j int) bool { return list[i].Time.After(list[j].Time) })
 	return list
 }

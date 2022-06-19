@@ -1,4 +1,4 @@
-package main
+package diff
 
 import (
 	"bytes"
@@ -10,16 +10,18 @@ import (
 
 var encoding = base32.NewEncoding("0123456789abcdefghijklmnopqrstuv")
 
-func encode(data []byte) string {
-	return encoding.EncodeToString(data)
+func Encode(addr ChunkAddress) string {
+	return encoding.EncodeToString(addr[:])
 }
 
-func decode(s string) []byte {
+func Decode(s string) ChunkAddress {
 	slice, err := encoding.DecodeString(s)
 	if err != nil {
 		fmt.Println(err)
 	}
-	return slice
+	h := ChunkAddress{}
+	copy(h[:], slice[:20])
+	return h
 }
 
 func hashMap(data map[string]string) ChunkAddress {
