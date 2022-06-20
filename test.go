@@ -21,15 +21,14 @@ func check(e error) {
 
 func Test() {
 
-	Init()
+	db_name := "digit_20220620201201"
+	tb_name := "test"
+	username := "fiona"
+	password := "12345678"
+	// Init(db_name, username, password)
 	cg := NewCommitGraph()
 	stage := NewStage()
 	_ = stage
-
-	db_name := "KoreanShowbiz"
-	tb_name := "Member"
-	username := "noidname"
-	password := "test"
 	var connstr = "postgres://" + username + ":" + password + "@localhost:5432/" + db_name
 	db, err := sql.Open("pgx", connstr)
 	check(err)
@@ -69,9 +68,9 @@ func Test() {
 	stage.PrintStatus()
 
 	// Commit
-	/* cg.NewCommit(time.Now(), "Tim", Encode(cursor_modified1.GetHash()), cursor_modified1.GetTree(), "Second Commit")
+	cg.NewCommit(time.Now(), "Tim", Encode(cursor_modified1.GetHash()), cursor_modified1.GetTree(), "Second Commit")
 	stage.Commit()
-	stage.PrintStatus() */
+	stage.PrintStatus()
 
 	rows, err := db.QueryContext(context.Background(), "select * from "+tb_name)
 	check(err)
@@ -251,3 +250,7 @@ func readRows(rows *sql.Rows) [][]string {
 	}
 	return row_s
 }
+
+// postgresql
+// CREATE TABLE test2 (id serial, name varchar(255));
+// INSERT INTO test2("id", "name") VALUES (1, 'test'), (2, 'test2'), (3, 'test3'), (4, 'test4');

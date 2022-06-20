@@ -84,9 +84,9 @@ func GetStatus(view_name string, connstr string) [][2]int {
 	rows, err := db.QueryContext(context.Background(), "select digitsnid, digitstatus from "+view_name+"__backend order by digitsnid asc")
 	check(err)
 	defer rows.Close()
-	cols, err := rows.Columns()
+	_, err = rows.Columns()
 	check(err)
-	fmt.Println(cols)
+	// fmt.Println(cols)
 	var status [][2]int
 	for rows.Next() {
 		var ss [2]int

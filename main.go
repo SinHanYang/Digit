@@ -1,8 +1,6 @@
 package main
 
-import (
-	digit "Digit/cmd/digit"
-)
+import "Digit/cmd/digit"
 
 func main() {
 	digit.Execute()

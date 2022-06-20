@@ -156,6 +156,8 @@ type DigitRequest struct {
 	Add_all   bool
 	// for sql
 	Sql_query string
+	// for commit
+	Commit_message string
 }
 
 type DigitResponse struct {
