@@ -15,6 +15,8 @@ require (
 	github.com/jackc/pgx/v4 v4.16.1 // indirect
 	golang.org/x/crypto v0.0.0-20210711020723-a769d52b0f97 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	github.com/kardianos/service v1.2.1 // indirect
+	golang.org/x/sys v0.0.0-20201015000850-e3ed0017c211 // indirect
 )
 
 require (
