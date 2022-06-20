@@ -1,6 +1,8 @@
 CREATE OR REPLACE FUNCTION hook_update() RETURNS trigger AS $hook_update$
 DECLARE
     x smallint;
+    oldsnid varchar;
+    newsnid varchar;
 BEGIN
     SELECT d INTO x FROM flag;
     IF TG_OP = 'DELETE' THEN
@@ -8,12 +10,14 @@ BEGIN
     ELSIF x=1 THEN
         RETURN NEW;
     ELSE
-        NEW.digitsnid:= nextval(pg_get_serial_sequence(TG_TABLE_NAME,'digitsnid'));
+        NEW.digitsnid := nextval(pg_get_serial_sequence(TG_TABLE_NAME,'digitsnid'));
+        newsnid := NEW.digitsnid::text;
+        oldsnid := (2)::text;
         EXECUTE format(
             'INSERT INTO %I select $1.*'
             ,TG_TABLE_NAME) USING NEW;
         RAISE NOTICE 'here';
-        OLD.digitstatus=0;
+        OLD.digitstatus=(oldsnid||newsnid)::int;
         RETURN OLD;
     END IF;
 EXCEPTION
