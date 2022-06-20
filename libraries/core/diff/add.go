@@ -1,10 +1,11 @@
 package diff
 
 import (
+	"Digit/libraries/core/postgres"
 	"fmt"
 )
 
-type StageMap map[KeyType]Difference
+type StageMap map[int]Difference
 
 type Stage struct {
 	StageAdded StageMap
@@ -34,8 +35,19 @@ func (s *Stage) Add(head_cursor ChunkCursor, current_cursor ChunkCursor) []Diffe
 }
 
 // Unstage All -> Rollback all
-func (s *Stage) Unstage() {
+func (s *Stage) Unstage(lastid int, view_name string, connstr string) {
 	// TODO rollback
+	var rollback [][2]int
+	postgres.Rollback(lastid, view_name, connstr)
+	for key, dif := range s.StageAdded {
+		if dif.Op == Add {
+			// do nothing ?
+		} else if dif.Op == Delete || dif.Op == Edit {
+			// postgres.ModifyStatus(view_name, , coconnstr)
+			rollback = append(rollback, [2]int{int(key), 1})
+		}
+	}
+	postgres.ModifyStatus(view_name, rollback, connstr)
 	s.StageAdded = make(StageMap)
 }
 

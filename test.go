@@ -28,7 +28,9 @@ func Test() {
 
 	db_name := "KoreanShowbiz"
 	tb_name := "Member"
-	var connstr = "postgres://noidname:test@localhost:5432/" + db_name
+	username := "noidname"
+	password := "test"
+	var connstr = "postgres://" + username + ":" + password + "@localhost:5432/" + db_name
 	db, err := sql.Open("pgx", connstr)
 	check(err)
 	status := GetStatus(tb_name, connstr)
@@ -42,19 +44,19 @@ func Test() {
 	fmt.Println(cg.GetHeadCommit().Message)
 
 	// Insert Statement
-	/* stmt, err := db.PrepareContext(context.Background(), "INSERT INTO "+tb_name+" VALUES ($1, $2, $3, $4, $5, $6)")
+	stmt, err := db.PrepareContext(context.Background(), "INSERT INTO "+tb_name+" VALUES ($1, $2, $3, $4, $5, $6)")
 	check(err)
 	_, err = stmt.ExecContext(context.Background(), "1", "2", "3", "4", "5", "6")
-	check(err) */
+	check(err)
 	// Update Statement
-	/* stmt, err := db.PrepareContext(context.Background(), "UPDATE "+tb_name+" SET GroupName=$1 WHERE GroupName=$2")
+	stmt, err = db.PrepareContext(context.Background(), "UPDATE "+tb_name+" SET GroupName=$1 WHERE GroupName=$2")
 	check(err)
 	_, err = stmt.ExecContext(context.Background(), "OFF", "ONF")
-	check(err) */
-	// Delete Statement
-	stmt, err := db.PrepareContext(context.Background(), "DELETE FROM "+tb_name+" WHERE GroupName=$1")
 	check(err)
-	_, err = stmt.ExecContext(context.Background(), "ONF")
+	// Delete Statement
+	stmt, err = db.PrepareContext(context.Background(), "DELETE FROM "+tb_name+" WHERE GroupName=$1")
+	check(err)
+	_, err = stmt.ExecContext(context.Background(), "OFF")
 	check(err)
 
 	status2 := GetStatus(tb_name, connstr)
@@ -71,11 +73,13 @@ func Test() {
 	stage.Commit()
 	stage.PrintStatus() */
 
-	// (Unstage)RollBack
-	// Rollback(25, tb_name, connstr)
-	// stage.Unstage()
-
 	rows, err := db.QueryContext(context.Background(), "select * from "+tb_name)
+	check(err)
+	fmt.Println(readRows(rows))
+	// (Unstage)RollBack
+	stage.Unstage(25, tb_name, connstr)
+
+	rows, err = db.QueryContext(context.Background(), "select * from "+tb_name)
 	check(err)
 	fmt.Println(readRows(rows))
 
@@ -97,7 +101,7 @@ func Test() {
 // 	// define database name and table name
 // 	db_name := "KoreanShowbiz"
 // 	tb_name := "Member"
-// 	db_password := "107332021" // TODO modify to your password
+// 	db_password := ""
 
 // 	// connect mysql
 // 	db, err := sql.Open("mysql", "root:"+db_password+"@tcp(127.0.0.1:3306)/"+db_name+"?charset=utf8&parseTime=True")

@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"Digit/libraries/core/diff"
+	// "Digit/libraries/core/diff"
 	"context"
 	"database/sql"
 	"fmt"
@@ -59,7 +59,7 @@ func check(e error) {
 		panic(e)
 	}
 }
-func GetStatus(view_name string, connstr string) [][2]diff.KeyType {
+func GetStatus(view_name string, connstr string) [][2]int {
 	db, err := sql.Open("pgx", connstr)
 	check(err)
 	defer db.Close()
@@ -69,9 +69,9 @@ func GetStatus(view_name string, connstr string) [][2]diff.KeyType {
 	cols, err := rows.Columns()
 	check(err)
 	fmt.Println(cols)
-	var status [][2]diff.KeyType
+	var status [][2]int
 	for rows.Next() {
-		var ss [2]diff.KeyType
+		var ss [2]int
 		err := rows.Scan(&ss[0], &ss[1])
 		check(err)
 		status = append(status, ss)
@@ -79,7 +79,7 @@ func GetStatus(view_name string, connstr string) [][2]diff.KeyType {
 	return status
 }
 
-func modifyStatus(view_name string, status [][2]diff.KeyType, connstr string) {
+func ModifyStatus(view_name string, status [][2]int, connstr string) {
 	db, err := sql.Open("pgx", connstr)
 	check(err)
 	defer db.Close()
@@ -106,8 +106,8 @@ func modifyStatus(view_name string, status [][2]diff.KeyType, connstr string) {
 	// fmt.Println(res.RowsAffected())
 }
 
-func Rollback(lastid diff.KeyType, view_name string, connstr string) {
-	var setvalint diff.KeyType
+func Rollback(lastid int, view_name string, connstr string) {
+	var setvalint int
 	var setvalbool bool
 	setvalbool = true
 	setvalint = lastid

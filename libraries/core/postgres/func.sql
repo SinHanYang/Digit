@@ -37,5 +37,6 @@ END;
 $hook_update$ LANGUAGE plpgsql;
 
 CREATE TABLE flag (d int);
+INSERT INTO flag values (0);
 --CREATE TRIGGER hook_update BEFORE UPDATE OR DELETE on t__backend FOR EACH ROW EXECUTE FUNCTION hook_update();
 

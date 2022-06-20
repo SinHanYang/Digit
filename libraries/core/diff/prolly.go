@@ -1,11 +1,14 @@
 package diff
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Value interface {
 	Less(Value) bool
-	GetKey() KeyType
-	GetData() map[string]KeyType
+	GetKey() int
+	GetData() map[string]int
 	GetHash() ChunkAddress
 }
 
@@ -39,8 +42,18 @@ type Difference struct {
 	Value Value
 }
 
+func removeLeadingDigit(n int) int {
+	t := strconv.Itoa(int(n))
+	t = t[1:]
+	r, _ := strconv.Atoi(t)
+	return r
+}
+
 func Diff(left, right Cursor) []Difference {
 	var res []Difference
+	addmap := make(map[int]Value)
+	editmap := make(map[int]Value)
+	deletemap := make(map[int]Value)
 	counter := 0
 	for !left.Done() && !right.Done() {
 		lv, rv := left.Current(), right.Current()
@@ -48,17 +61,21 @@ func Diff(left, right Cursor) []Difference {
 		fmt.Println("Right:", rv.GetKey())
 		counter++
 		if lv.Less(rv) {
-			res = append(res, Difference{Op: Delete, Value: lv})
+			// diffmap[lv.GetKey()] = lv.GetData()["digitstatus"]
+			// res = append(res, Difference{Op: Delete, Value: lv})
+			deletemap[lv.GetKey()] = lv
 			left.Next()
 		} else if rv.Less(lv) {
-			res = append(res, Difference{Op: Add, Value: rv})
+			// res = append(res, Difference{Op: Add, Value: rv})
+			addmap[rv.GetKey()] = rv
 			right.Next()
 		} else {
 			if lv.GetHash() == rv.GetHash() {
 				fmt.Println("FastForward!")
 				FastForwardUntilUnequal(left, right)
 			} else {
-				res = append(res, Difference{Op: Edit, Value: rv})
+				// res = append(res, Difference{Op: Edit, Value: rv})
+				editmap[rv.GetKey()] = rv
 				left.Next()
 				right.Next()
 			}
@@ -66,16 +83,50 @@ func Diff(left, right Cursor) []Difference {
 	}
 
 	for !left.Done() {
-		res = append(res, Difference{Op: Delete, Value: left.Current()})
+		// res = append(res, Difference{Op: Delete, Value: left.Current()})
+		deletemap[left.Current().GetKey()] = left.Current()
 		left.Next()
 		counter++
 	}
 	for !right.Done() {
-		res = append(res, Difference{Op: Add, Value: right.Current()})
+		// res = append(res, Difference{Op: Add, Value: right.Current()})
+		addmap[right.Current().GetKey()] = right.Current()
 		right.Next()
 		counter++
 	}
 	fmt.Println(counter)
+	for _, v := range editmap {
+		// remove add in addmap and editmap
+		currentStatus := v.GetData()["digitstatus"]
+		if currentStatus == 0 {
+			res = append(res, Difference{Op: Delete, Value: v})
+		} else {
+			if _, ok := editmap[removeLeadingDigit(currentStatus)]; !ok {
+				if v2, ok := addmap[removeLeadingDigit(currentStatus)]; ok {
+					if v2.GetData()["digitstatus"] == 0 {
+						res = append(res, Difference{Op: Delete, Value: v})
+					} else {
+						res = append(res, Difference{Op: Edit, Value: v})
+					}
+					delete(addmap, removeLeadingDigit(currentStatus))
+				} else {
+					fmt.Println("Something wrong!")
+				}
+			} else {
+				// find in editmap -> skip
+				continue
+			}
+		}
+
+	}
+	for _, v := range addmap {
+		if v.GetData()["digitstatus"] == 1 {
+			res = append(res, Difference{Op: Add, Value: v})
+		} else {
+			res = append(res, Difference{Op: Delete, Value: v})
+		}
+	}
+	// fmt.Println(len(deletemap))
 	return res
 }
 
