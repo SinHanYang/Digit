@@ -1,14 +1,20 @@
 package postgres
 
 import (
+	"Digit/libraries/core/diff"
 	"context"
 	"database/sql"
 	"fmt"
+	"io/ioutil"
+	"path/filepath"
 
+	"github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
-var connstr = "postgres://billy:test@localhost:5432/test"
+// TODO
+var db_name = "KoreanShowbiz"
+var connstr = "postgres://noidname:test@localhost:5432/" + db_name
 
 // func main() {
 // 	status := getStatus("teammembers", connstr)
@@ -25,12 +31,35 @@ var connstr = "postgres://billy:test@localhost:5432/test"
 // 	rollback(4, "teammembers", connstr)
 // 	fmt.Println(getStatus("teammembers", connstr))
 // }
+
+func Init() {
+	readSqlFile("func.sql")
+	readSqlFile("start.sql")
+	readSqlFile("test.sql")
+}
+
+func readSqlFile(filename string) {
+	path := filepath.Join("libraries", "core", "postgres", filename)
+	c, ioErr := ioutil.ReadFile(path)
+	if ioErr != nil {
+		fmt.Println(ioErr)
+	}
+	conn, err := pgx.Connect(context.Background(), connstr)
+	if err != nil {
+		fmt.Println(err)
+	}
+	_, err = conn.Exec(context.Background(), string(c))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)
 	}
 }
-func getStatus(view_name string, connstr string) [][2]int {
+func GetStatus(view_name string, connstr string) [][2]diff.KeyType {
 	db, err := sql.Open("pgx", connstr)
 	check(err)
 	defer db.Close()
@@ -40,9 +69,9 @@ func getStatus(view_name string, connstr string) [][2]int {
 	cols, err := rows.Columns()
 	check(err)
 	fmt.Println(cols)
-	var status [][2]int
+	var status [][2]diff.KeyType
 	for rows.Next() {
-		var ss [2]int
+		var ss [2]diff.KeyType
 		err := rows.Scan(&ss[0], &ss[1])
 		check(err)
 		status = append(status, ss)
@@ -50,7 +79,7 @@ func getStatus(view_name string, connstr string) [][2]int {
 	return status
 }
 
-func modifyStatus(view_name string, status [][2]int, connstr string) {
+func modifyStatus(view_name string, status [][2]diff.KeyType, connstr string) {
 	db, err := sql.Open("pgx", connstr)
 	check(err)
 	defer db.Close()
@@ -77,8 +106,8 @@ func modifyStatus(view_name string, status [][2]int, connstr string) {
 	// fmt.Println(res.RowsAffected())
 }
 
-func rollback(lastid int, view_name string, connstr string) {
-	var setvalint int
+func Rollback(lastid diff.KeyType, view_name string, connstr string) {
+	var setvalint diff.KeyType
 	var setvalbool bool
 	setvalbool = true
 	setvalint = lastid

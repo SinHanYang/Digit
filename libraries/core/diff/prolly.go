@@ -4,8 +4,8 @@ import "fmt"
 
 type Value interface {
 	Less(Value) bool
-	GetKey() string
-	GetData() map[string]string
+	GetKey() KeyType
+	GetData() map[string]KeyType
 	GetHash() ChunkAddress
 }
 

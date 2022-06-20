@@ -6,4 +6,5 @@ import (
 
 func main() {
 	digit.Execute()
+	Test()
 }

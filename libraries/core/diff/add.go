@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-type StageMap map[string]Difference
+type StageMap map[KeyType]Difference
 
 type Stage struct {
 	StageAdded StageMap
@@ -25,15 +25,16 @@ func (s *Stage) PrintStatus() {
 }
 
 // Update all stages
-func (s *Stage) Add(head_cursor ChunkCursor, current_cursor ChunkCursor) {
+func (s *Stage) Add(head_cursor ChunkCursor, current_cursor ChunkCursor) []Difference {
 	diff := Diff(&head_cursor, &current_cursor)
 	for _, dif := range diff {
 		s.StageAdded[dif.Value.GetKey()] = dif
 	}
+	return diff
 }
 
 // Unstage All -> Rollback all
-func (s *Stage) Unstage(head_cursor ChunkCursor, current_cursor ChunkCursor) {
+func (s *Stage) Unstage() {
 	// TODO rollback
 	s.StageAdded = make(StageMap)
 }

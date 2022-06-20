@@ -24,7 +24,7 @@ func Decode(s string) ChunkAddress {
 	return h
 }
 
-func hashMap(data map[string]string) ChunkAddress {
+func hashMap(data map[string]KeyType) ChunkAddress {
 	var keys []string
 	b := new(bytes.Buffer)
 	for key, _ := range data {

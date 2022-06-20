@@ -10,18 +10,19 @@ var rollingHashThreshold = 128 * 20 * 2
 var EmptyChunk Chunk
 var EmptyPriKey PriKey
 
+type KeyType int
 type PriKey struct {
-	key           string
+	key           KeyType
 	nextLevelHash ChunkAddress
-	data          map[string]string
+	data          map[string]KeyType
 	nextPriKey    *PriKey
 }
 
-func (myKey PriKey) GetKey() string {
+func (myKey PriKey) GetKey() KeyType {
 	return myKey.key
 }
 
-func (myKey PriKey) GetData() map[string]string {
+func (myKey PriKey) GetData() map[string]KeyType {
 	return myKey.data
 }
 
@@ -156,7 +157,9 @@ func NewChunk(priKeys []PriKey) Chunk {
 	content := ""
 	chunkMap := make(map[ChunkAddress]PriKey, len(priKeys))
 	for i, priKey := range priKeys {
-		content += priKey.key
+		for _, b := range priKey.GetHash() {
+			content += string(b)
+		}
 		if i == len(priKeys)-1 {
 			priKeys[i].nextPriKey = nil
 		} else {
@@ -178,10 +181,10 @@ func NewChunk(priKeys []PriKey) Chunk {
 
 }
 
-func NewCursor(header []string, rows [][]string) ChunkCursor {
+func NewCursor(header []string, rows [][2]KeyType) ChunkCursor {
 	t := NewProllyTree(header, rows)
 	// _ = t
-	// printProllyTree(t.tree)
+	printProllyTree(t.tree)
 
 	/* 	   	for _, v := range t.tree {
 		for key, value := range v {
@@ -202,14 +205,14 @@ func NewCursorFromProllyTree(t ProllyTree) ChunkCursor {
 	}
 }
 
-func NewProllyTree(header []string, rows [][]string) ProllyTree {
+func NewProllyTree(header []string, rows [][2]KeyType) ProllyTree {
 
 	var newProllyTreeLevel [][]Chunk
 	// init all priKeys
 	var priKeys []PriKey
 	for _, row := range rows {
-		data := make(map[string]string, len(rows))
-		key := row[2]
+		data := make(map[string]KeyType, len(rows))
+		key := row[0]
 		for i := range row {
 			data[header[i]] = row[i]
 		}
@@ -254,8 +257,8 @@ func NewProllyTree(header []string, rows [][]string) ProllyTree {
 				currentHashSum = 0
 			}
 		}
-		// fmt.Println(startAt)
-		// fmt.Println(len(priKeys))
+		fmt.Println(startAt)
+		fmt.Println(len(priKeys))
 
 		if startAt < len(priKeys) {
 			newChk := NewChunk(priKeys[startAt:])
@@ -275,12 +278,13 @@ func NewProllyTree(header []string, rows [][]string) ProllyTree {
 				newChunks[i].nextChunk = &newChunks[i+1]
 			}
 		}
-		/* for i := range newChunks {
+		for i := range newChunks {
 			fmt.Println(i)
 			for _, v := range newChunks[i].chunkMap {
 				fmt.Println(v.key)
 			}
-		} */
+			fmt.Println()
+		}
 		newProllyTreeLevel = append(newProllyTreeLevel, newChunks)
 		priKeys = newPrikeys
 
