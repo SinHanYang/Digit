@@ -77,17 +77,19 @@ func Test() {
 	check(err)
 	fmt.Println(readRows(rows))
 	// (Unstage)RollBack
-	stage.Unstage(25, tb_name, connstr)
+	stage.Unstage(cg.GetHeadCommit().Value.Lastid, tb_name, connstr)
 
+	// print table
 	rows, err = db.QueryContext(context.Background(), "select * from "+tb_name)
 	check(err)
 	fmt.Println(readRows(rows))
 
+	// delete this table
 	stmt, err = db.PrepareContext(context.Background(), "DROP VIEW "+tb_name)
 	check(err)
 	_, err = stmt.ExecContext(context.Background())
 	check(err)
-
+	// delete backend table
 	stmt, err = db.PrepareContext(context.Background(), "DROP TABLE "+tb_name+"__backend")
 	check(err)
 	_, err = stmt.ExecContext(context.Background())

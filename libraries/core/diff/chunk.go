@@ -38,6 +38,7 @@ func (myKey PriKey) Less(otherKey Value) bool {
 type ProllyTree struct {
 	tree       []map[ChunkAddress]Chunk
 	headChunks []Chunk
+	Lastid     int
 }
 
 type Chunk struct {
@@ -310,6 +311,7 @@ func NewProllyTree(header []string, rows [][2]int) ProllyTree {
 	return ProllyTree{
 		tree:       t,
 		headChunks: heads,
+		Lastid:     len(rows),
 	}
 }
 
