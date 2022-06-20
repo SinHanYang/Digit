@@ -207,6 +207,43 @@ func NewCursorFromProllyTree(t ProllyTree) ChunkCursor {
 
 func NewProllyTree(header []string, rows [][2]int) ProllyTree {
 
+	if len(rows) == 1 {
+		var newProllyTreeLevel [][]Chunk
+		// init all priKeys
+		var priKeys []PriKey
+		data := make(map[string]int, len(rows))
+		row := rows[0]
+		key := row[0]
+		for i := range row {
+			data[header[i]] = row[i]
+		}
+		priKey := PriKey{
+			key:           key,
+			data:          data,
+			nextPriKey:    nil,
+			nextLevelHash: hashMap(data),
+		}
+		priKeys = append(priKeys, priKey)
+		chunk := NewChunk(priKeys)
+		newProllyTreeLevel = append(newProllyTreeLevel, []Chunk{chunk})
+
+		var t []map[ChunkAddress]Chunk
+		var heads []Chunk
+		for _, v := range newProllyTreeLevel {
+			m := make(map[ChunkAddress]Chunk)
+			heads = append(heads, v[0])
+			for i := range v {
+				m[v[i].hash] = v[i]
+			}
+			t = append(t, m)
+		}
+		return ProllyTree{
+			tree:       t,
+			headChunks: heads,
+			Lastid:     len(rows),
+		}
+	}
+
 	var newProllyTreeLevel [][]Chunk
 	// init all priKeys
 	var priKeys []PriKey
