@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"path/filepath"
 
 	"github.com/jackc/pgx/v4"
@@ -13,8 +14,8 @@ import (
 )
 
 // TODO
-var db_name = "KoreanShowbiz"
-var connstr = "postgres://noidname:test@localhost:5432/" + db_name
+var DB_NAME string
+var connstr string
 
 // func main() {
 // 	status := getStatus("teammembers", connstr)
@@ -32,7 +33,24 @@ var connstr = "postgres://noidname:test@localhost:5432/" + db_name
 // 	fmt.Println(getStatus("teammembers", connstr))
 // }
 
-func Init() {
+func CreateDB(db_name string, connstr string) {
+	db, err := sql.Open("pgx", connstr)
+	if err != nil {
+		//handle the error
+		log.Fatal(err)
+	}
+	_, err = db.Exec("CREATE DATABASE " + db_name + ";")
+	if err != nil {
+		//handle the error
+		log.Fatal(err)
+	}
+}
+
+func Init(db_name string, db_user string, db_pass string) {
+	DB_NAME = db_name
+	connstr = "postgres://" + db_user + ":" + db_pass + "@localhost:5432/postgres"
+	CreateDB(db_name, connstr)
+	connstr = "postgres://" + db_user + ":" + db_pass + "@localhost:5432/" + db_name
 	readSqlFile("func.sql")
 	readSqlFile("start.sql")
 	readSqlFile("test.sql")

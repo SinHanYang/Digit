@@ -3,10 +3,12 @@ package digit
 import (
 	env "Digit/libraries/core/env"
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -15,6 +17,7 @@ import (
 )
 
 var FILE_MODE = os.ModePerm
+var INIT_API = "http://localhost:8089/init"
 
 type ConfigFile struct {
 	DB_NAME string
@@ -63,7 +66,7 @@ func Init(path string) {
 	}
 
 	// create file: config, description, HEAD
-	db_name := time.Now().Format("20060102150405")
+	db_name := "digit_" + time.Now().Format("20060102150405")
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter your DB username: ")
 	user, _ := reader.ReadString('\n')
@@ -83,6 +86,17 @@ func Init(path string) {
 	head, _ := os.Create(filepath.Join(digitPath, "HEAD"))
 	head.Write([]byte("ref: refs/heads/master"))
 
+	req, err := http.NewRequest("POST", INIT_API, bytes.NewBuffer(file))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Fatal("Digit server Init failed.")
+	}
 	// create dir: hooks, info, object, refs
 	// os.Mkdir(filepath.Join(digitPath, "hooks"), FILE_MODE)
 	// os.Mkdir(filepath.Join(digitPath, "info"), FILE_MODE)
