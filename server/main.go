@@ -31,6 +31,9 @@ type DigitRequest struct {
 	Sql_query string
 	// for commit
 	Commit_message string
+	// for reset
+	Reset_hash string
+	Reset_tb   string
 }
 
 type DigitResponse struct {
@@ -134,6 +137,30 @@ func commitHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp_json)
 }
 
+func resetHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("/reset")
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	body, _ := ioutil.ReadAll(r.Body)
+	body_str := string(body)
+	fmt.Println(body_str)
+	var data DigitRequest
+	err := json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	cg.SetHead(data.Reset_hash)
+	connstr := "postgres://" + data.DB_USER + ":" + data.DB_PASS + "@localhost:5432/" + data.DB_NAME
+	stage.Unstage(cg.GetHeadCommit().Value.Lastid, data.Reset_tb, connstr)
+	resp.Status = "ok"
+	resp.Message = "Reset to " + data.Reset_hash
+	resp_json, _ := json.Marshal(resp)
+	w.Write(resp_json)
+}
+
 func sqlHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("/sql")
 	if r.Method != "POST" {
@@ -207,6 +234,7 @@ func main() {
 	http.HandleFunc("/init", initHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/commit", commitHandler)
+	http.HandleFunc("/reset", resetHandler)
 	http.HandleFunc("/sql", sqlHandler)
 	log.Fatal(http.ListenAndServe(":17617", nil))
 }

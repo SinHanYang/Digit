@@ -158,6 +158,9 @@ type DigitRequest struct {
 	Sql_query string
 	// for commit
 	Commit_message string
+	// for reset
+	Reset_hash string
+	Reset_tb   string
 }
 
 type DigitResponse struct {

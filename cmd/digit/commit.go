@@ -4,6 +4,7 @@ import (
 	env "Digit/libraries/core/env"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -39,7 +40,7 @@ func Commit(rest []string) {
 	_ = json.Unmarshal(body, &response)
 	if response.Message != "" {
 		// log the message
-		log.Println(response.Message)
+		fmt.Println(response.Message)
 	}
 
 }
