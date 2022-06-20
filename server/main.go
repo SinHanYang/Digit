@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -31,6 +32,9 @@ type DigitRequest struct {
 	Sql_query string
 	// for commit
 	Commit_message string
+	// for diff
+	Diff_from string
+	Diff_to   string
 	// for reset
 	Reset_hash string
 	Reset_tb   string
@@ -137,6 +141,69 @@ func commitHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(resp_json)
 }
 
+func logHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("/log")
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	logs := cg.ListCommits()
+	resp.Status = "ok"
+	resp.Message = ""
+	for _, log := range logs {
+		resp.Message += "Commit " + log.Hash + "\n" + "Author: " + log.Author + "\n" + "Date: " + log.Time.Format("2006-01-02 15:04:05") + "\n\n\t" + log.Message + "\n\n"
+	}
+	resp_json, _ := json.Marshal(resp)
+	w.Write(resp_json)
+}
+
+func diffHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("/diff")
+	if r.Method != "POST" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	body, _ := ioutil.ReadAll(r.Body)
+	body_str := string(body)
+	fmt.Println(body_str)
+	var data DigitRequest
+	err := json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+	cursor_left := diff.NewCursorFromProllyTree(cg.GetCommit(data.Diff_from).Value)
+	cursor_right := diff.NewCursorFromProllyTree(cg.GetCommit(data.Diff_to).Value)
+
+	d := diff.Diff(&cursor_left, &cursor_right)
+
+	resp.Status = "ok"
+	resp.Message = ""
+
+	var add_count int = 0
+	var del_count int = 0
+	var edit_count int = 0
+
+	for _, v := range d {
+
+		if v.Op == "ADD" {
+			// resp.Message += "[ADD] " + fmt.Sprint(v.Value.GetData()) + "\n"
+			add_count++
+		} else if v.Op == "DELETE" {
+			// resp.Message += "[DELETE] " + fmt.Sprint(v.Value.GetData()) + "\n"
+			del_count++
+		} else if v.Op == "EDIT" {
+			// resp.Message += "[EDIT] " + fmt.Sprint(v.Value.GetData()) + "\n"
+			edit_count++
+		}
+	}
+	resp.Message += strconv.Itoa(add_count) + " row(s) added. "
+	resp.Message += strconv.Itoa(del_count) + " row(s) deleted. "
+	resp.Message += strconv.Itoa(edit_count) + " row(s) edited."
+	resp_json, _ := json.Marshal(resp)
+	w.Write(resp_json)
+}
+
 func resetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("/reset")
 	if r.Method != "POST" {
@@ -234,6 +301,8 @@ func main() {
 	http.HandleFunc("/init", initHandler)
 	http.HandleFunc("/add", addHandler)
 	http.HandleFunc("/commit", commitHandler)
+	http.HandleFunc("/log", logHandler)
+	http.HandleFunc("/diff", diffHandler)
 	http.HandleFunc("/reset", resetHandler)
 	http.HandleFunc("/sql", sqlHandler)
 	log.Fatal(http.ListenAndServe(":17617", nil))

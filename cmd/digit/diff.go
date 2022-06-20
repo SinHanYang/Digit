@@ -1,11 +1,48 @@
 package digit
 
-import "github.com/spf13/cobra"
+import (
+	env "Digit/libraries/core/env"
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+
+	"github.com/spf13/cobra"
+)
+
+var DIFF_API = "http://localhost:17617/diff"
 
 func Diff(d bool, s bool, summary bool, args []string) {
 	// TODO: Diff implement
-	// TODO if len[args] == 0 => diff current_cursor and head
-	//  others => lookup commit_graph then diff
+	if len(args) < 2 {
+		log.Fatal("diff command requires two arguments")
+	}
+	data := DigitRequest{
+		Diff_from: args[0],
+		Diff_to:   args[1],
+	}
+	data.DB_NAME, data.DB_USER, data.DB_PASS, _ = env.GetConfig(".")
+	requestBody, _ := json.MarshalIndent(data, "", " ")
+	req, _ := http.NewRequest("POST", DIFF_API, bytes.NewBuffer(requestBody))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	// read response body as json
+	var response DigitResponse
+	body, _ := ioutil.ReadAll(resp.Body)
+	_ = json.Unmarshal(body, &response)
+	if response.Message != "" {
+		// log the message
+		fmt.Println(response.Message)
+	}
+
 }
 
 var diffCmd = &cobra.Command{

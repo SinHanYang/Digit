@@ -1,77 +1,40 @@
 package digit
 
 import (
+	env "Digit/libraries/core/env"
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 
 	"github.com/spf13/cobra"
 )
 
+var LOG_API = "http://localhost:17617/log"
+
 func Log(args []string) {
 	// Todo: Log implementation
-	// var curObjsha1 string
-	// if len(args) <= 1 {
-	// 	curObjsha1 = logWithoutArgs()
-	// } else {
-	// 	curObjsha1 = logWithArgs(args)
-	// }
-	// objStr := getCatFileStr(true, false, false, []string{curObjsha1})
-	// var commitObj CommitOjbect
-	// commitObj.Sha1 = curObjsha1
-	// commitObj.parseCommitObj([]byte(objStr))
+	data := DigitRequest{}
+	data.DB_NAME, data.DB_USER, data.DB_PASS, _ = env.GetConfig(".")
+	requestBody, _ := json.MarshalIndent(data, "", " ")
+	req, _ := http.NewRequest("POST", LOG_API, bytes.NewBuffer(requestBody))
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
 
-	// var buf bytes.Buffer
-	// printLog(&commitObj, &buf)
-	// fmt.Printf("%s", buf.Bytes())
-}
-
-// func logWithoutArgs() string {
-// 	//get objSha1 from HEAD
-// 	bytes, err := ioutil.ReadFile(filepath.Join(".git", "HEAD"))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	s := string(bytes)
-// 	i := strings.Index(s, " ")
-// 	path := s[i+1:]
-
-// 	sha1bytes, err := ioutil.ReadFile(filepath.Join(".git", path))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	return string(sha1bytes)
-// }
-
-// func logWithArgs(args []string) string {
-// 	argStr := args[1]
-// 	exist, curObjsha1 := isObjectExist(argStr)
-// 	if !exist {
-// 		exist, curObjsha1 = isRefExist(argStr)
-// 		if !exist {
-// 			log.Fatalf("Not a valid object name %s\n", argStr)
-// 		}
-// 	}
-// 	return curObjsha1
-// }
-
-func printLog(commit *CommitOjbect, buf *bytes.Buffer) {
-	buf.WriteString(fmt.Sprintf("commit %s\n", commit.Sha1))
-	buf.WriteString(fmt.Sprintf("Author: %s\n", commit.author))
-	buf.WriteString(fmt.Sprintf("Date:	%s\n", commit.date))
-	buf.WriteString(fmt.Sprintf("\n"))
-	buf.WriteString(fmt.Sprintf("%s\n", commit.message))
-	buf.WriteString(fmt.Sprintf("\n"))
-
-	// if commit.parent != "" {
-	// 	exist, parentSha1 := isObjectExist(commit.parent)
-	// 	if exist {
-	// 		var parent CommitOjbect
-	// 		parent.Sha1 = parentSha1
-	// 		objStr := getCatFileStr(true, false, false, []string{parentSha1})
-	// 		parent.parseCommitObj([]byte(objStr))
-	// 		printLog(&parent, buf)
-	// 	}
-	// }
+	// read response body as json
+	var response DigitResponse
+	body, _ := ioutil.ReadAll(resp.Body)
+	_ = json.Unmarshal(body, &response)
+	if response.Message != "" {
+		// log the message
+		fmt.Println(response.Message)
+	}
 }
 
 var logCmd = &cobra.Command{
