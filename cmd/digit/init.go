@@ -17,13 +17,7 @@ import (
 )
 
 var FILE_MODE = os.ModePerm
-var INIT_API = "http://localhost:8089/init"
-
-type ConfigFile struct {
-	DB_NAME string
-	DB_USER string
-	DB_PASS string
-}
+var INIT_API = "http://localhost:17617/init"
 
 func Init(path string) {
 

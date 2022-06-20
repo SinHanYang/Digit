@@ -140,3 +140,26 @@ func (commit *CommitOjbect) parseCommitObj(b []byte) *CommitOjbect {
 	commit.message = line6
 	return commit
 }
+
+type ConfigFile struct {
+	DB_NAME string
+	DB_USER string
+	DB_PASS string
+}
+
+type DigitRequest struct {
+	DB_NAME string
+	DB_USER string
+	DB_PASS string
+	// for add
+	Add_table []string
+	Add_all   bool
+	// for sql
+	Sql_query string
+}
+
+type DigitResponse struct {
+	Status  string
+	Message string
+	Data    interface{}
+}

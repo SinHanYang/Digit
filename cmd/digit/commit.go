@@ -6,11 +6,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Commit(a string, m string, rest []string) {
+func Commit(m string, rest []string) {
 	// TODO: Commit implement
-	if a == "" {
-		log.Fatal("please tell me who you are")
-	}
 	if m == "" {
 		log.Fatal("commit message cannot be empty")
 	}
@@ -24,16 +21,13 @@ var commitCmd = &cobra.Command{
 	Short: "commit",
 	Long:  "commit",
 	Run: func(cmd *cobra.Command, args []string) {
-		a, _ := cmd.Flags().GetString("author")
 		m, _ := cmd.Flags().GetString("message")
-		Commit(a, m, args)
+		Commit(m, args)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(commitCmd)
-	commitCmd.Flags().StringP("author", "a", "", "commit author")
 	commitCmd.Flags().StringP("message", "m", "", "commit message")
-	commitCmd.MarkFlagRequired("author")
 	commitCmd.MarkFlagRequired("message")
 }
