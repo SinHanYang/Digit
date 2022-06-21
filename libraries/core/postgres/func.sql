@@ -40,3 +40,16 @@ CREATE TABLE flag (d int);
 INSERT INTO flag values (0);
 --CREATE TRIGGER hook_update BEFORE UPDATE OR DELETE on t__backend FOR EACH ROW EXECUTE FUNCTION hook_update();
 
+-- CREATE FUNCTION delete_redundant(tablename TEXT) RETURNS VOID AS $delete_redundant$
+-- DECLARE 
+--     x int;
+    
+-- BEGIN
+--     SELECT lastid INTO x FROM doltcommit;
+--     EXECUTE "DELETE FROM "
+--             || table_name
+--             ||" WHERE digitsnid>"||x::text
+--             ||" AND digitstatus=="||0::text
+--     SELECT
+-- END;
+-- $delete_redundant$ LANGUAGE plpgsql;

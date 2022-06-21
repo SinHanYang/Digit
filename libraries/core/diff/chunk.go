@@ -32,6 +32,15 @@ func (myKey PriKey) GetHash() ChunkAddress {
 func (myKey PriKey) Less(otherKey Value) bool {
 	return myKey.GetKey() < otherKey.GetKey()
 }
+func (myKey PriKey) GetNext() *PriKey { return myKey.nextPriKey }
+func NewPrikey(k int, nLHash string, d map[string]int, nPrikey *PriKey) PriKey {
+	return PriKey{
+		key:           k,
+		nextLevelHash: Decode(nLHash),
+		data:          d,
+		nextPriKey:    nPrikey,
+	}
+}
 
 // leaves at ProllyTree[0]
 // root at ProllyTree[len(ProllyTree)-1]
@@ -41,6 +50,9 @@ type ProllyTree struct {
 	Lastid     int
 }
 
+func (t ProllyTree) GetTree() []map[ChunkAddress]Chunk { return t.tree }
+func (t ProllyTree) GetheadChunks() []Chunk            { return t.headChunks }
+
 type Chunk struct {
 	hash        ChunkAddress
 	chunkMap    map[ChunkAddress]PriKey
@@ -48,6 +60,11 @@ type Chunk struct {
 	parentChunk *Chunk
 	headPriKey  *PriKey
 }
+
+func (c Chunk) GetHash() ChunkAddress { return c.hash }
+func (c Chunk) GetNext() *Chunk       { return c.nextChunk }
+func (c Chunk) GetParent() *Chunk     { return c.parentChunk }
+func (c Chunk) GetHeadPri() *PriKey   { return c.headPriKey }
 
 type ChunkCursor struct {
 	hash          ChunkAddress
