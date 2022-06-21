@@ -52,6 +52,13 @@ type ProllyTree struct {
 
 func (t ProllyTree) GetTree() []map[ChunkAddress]Chunk { return t.tree }
 func (t ProllyTree) GetheadChunks() []Chunk            { return t.headChunks }
+func NewLoadProllyTree(t []map[ChunkAddress]Chunk, h []Chunk, Lid int) ProllyTree {
+	return ProllyTree{
+		tree:       t,
+		headChunks: h,
+		Lastid:     Lid,
+	}
+}
 
 type Chunk struct {
 	hash        ChunkAddress
@@ -61,10 +68,20 @@ type Chunk struct {
 	headPriKey  *PriKey
 }
 
-func (c Chunk) GetHash() ChunkAddress { return c.hash }
-func (c Chunk) GetNext() *Chunk       { return c.nextChunk }
-func (c Chunk) GetParent() *Chunk     { return c.parentChunk }
-func (c Chunk) GetHeadPri() *PriKey   { return c.headPriKey }
+func (c Chunk) GetHash() ChunkAddress                { return c.hash }
+func (c Chunk) GetNext() *Chunk                      { return c.nextChunk }
+func (c Chunk) GetParent() *Chunk                    { return c.parentChunk }
+func (c Chunk) GetHeadPri() *PriKey                  { return c.headPriKey }
+func (c Chunk) GetChunkMap() map[ChunkAddress]PriKey { return c.chunkMap }
+func NewLoadChunk(h ChunkAddress, cm map[ChunkAddress]PriKey, nc *Chunk, pc *Chunk, hp *PriKey) Chunk {
+	return Chunk{
+		hash:        h,
+		chunkMap:    cm,
+		nextChunk:   nc,
+		parentChunk: pc,
+		headPriKey:  hp,
+	}
+}
 
 type ChunkCursor struct {
 	hash          ChunkAddress

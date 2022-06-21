@@ -5,19 +5,18 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strconv"
 )
 
 type pkeySaver struct {
 	Key           int
 	NextLevelHash string
-	Data          map[string]string
+	Data          map[string]int
 	NextPkey      string //filename
 }
 
 type chunkSaver struct {
 	Hash        string
-	Chunkmap    map[string]string
+	Chunkmap    []string
 	NextChunk   string //encoded Hash
 	ParentChunk string //encoded Hash
 	HeadPrikey  string
@@ -37,15 +36,11 @@ func savePrikey(pkey *PriKey, prikeymap map[string]string) (nxtlvhash string) {
 	} else if _, ok := prikeymap[Encode(pkey.GetHash())]; ok {
 		return Encode(pkey.GetHash())
 	} else {
-		maptosave := make(map[string]string, len(pkey.GetData()))
-		for key, ele := range pkey.GetData() {
-			maptosave[key] = strconv.Itoa(ele)
-		}
 		nxtlvhash = Encode(pkey.GetHash())
 		s := pkeySaver{
 			Key:           int(pkey.GetKey()),
 			NextLevelHash: nxtlvhash,
-			Data:          maptosave,
+			Data:          pkey.GetData(),
 			NextPkey:      savePrikey(pkey.GetNext(), prikeymap),
 		}
 
@@ -67,8 +62,13 @@ func saveChunk(chunk *Chunk, chunkmap map[string]string, prikeymap map[string]st
 		return Encode(chunk.GetHash())
 	} else {
 		curhash := Encode(chunk.GetHash())
+		a := make([]string, 0)
+		for k, _ := range chunk.GetChunkMap() {
+			a = append(a, Encode(k))
+		}
 		s := chunkSaver{
 			Hash:        curhash,
+			Chunkmap:    a,
 			NextChunk:   saveChunk(chunk.GetNext(), chunkmap, prikeymap),
 			ParentChunk: saveChunk(chunk.GetParent(), chunkmap, prikeymap),
 			HeadPrikey:  savePrikey(chunk.GetHeadPri(), prikeymap),
@@ -82,7 +82,7 @@ func saveChunk(chunk *Chunk, chunkmap map[string]string, prikeymap map[string]st
 	}
 }
 
-func SaveTree(tree ProllyTree) {
+func SaveTree(tree ProllyTree) []byte {
 	tosaveChunks := make([]map[string]string, 0)
 	tosaveHeads := make([]string, 0)
 	tosavePkeys := make([]map[string]string, 0)
@@ -103,15 +103,102 @@ func SaveTree(tree ProllyTree) {
 	b, err := json.Marshal(s)
 	check(err)
 	fmt.Println(string(b))
+	return b
 
 }
 
-// func loadTree(b []byte) ProllyTree {
-// 	var s treeSaver
-// 	json.Unmarshal(b, &s)
+func loadPrikey(b64 string, encodedmap map[string]string, resultmap map[ChunkAddress]PriKey) *PriKey {
+	b, err := base64.URLEncoding.DecodeString(b64)
+	var s pkeySaver
+	check(err)
+	json.Unmarshal(b, &s)
+	ca := Decode(s.NextLevelHash)
+	if p, ok := resultmap[ca]; ok {
+		return &p
+	} else {
+		if s.NextPkey != "nil" {
+			p := NewPrikey(s.Key, s.NextLevelHash, s.Data,
+				loadPrikey(
+					encodedmap[s.NextPkey],
+					encodedmap,
+					resultmap,
+				),
+			)
+			resultmap[ca] = p
+			return &p
+		} else {
+			p := NewPrikey(s.Key, s.NextLevelHash, s.Data, nil)
+			resultmap[ca] = p
+			return nil
+		}
+	}
+}
 
-// 	return p
-// }
+func loadChunk(b64 string, prikeymap map[ChunkAddress]PriKey, encChunkmap map[string]string, resultmap map[ChunkAddress]Chunk) *Chunk {
+	b, err := base64.URLEncoding.DecodeString(b64)
+	check(err)
+	var s chunkSaver
+	json.Unmarshal(b, &s)
+	hs := Decode(s.Hash)
+	if c, ok := resultmap[hs]; ok {
+		return &c
+	} else {
+		var ncp, npp *Chunk
+		if s.NextChunk != "nil" {
+			ncp = loadChunk(encChunkmap[s.NextChunk], prikeymap, encChunkmap, resultmap)
+		} else {
+			ncp = nil
+		}
+		if s.ParentChunk != "nil" {
+			npp = loadChunk(encChunkmap[s.ParentChunk], prikeymap, encChunkmap, resultmap)
+		} else {
+			npp = nil
+		}
+		mpkey := make(map[ChunkAddress]PriKey, 0)
+		for _, k := range s.Chunkmap {
+			dk := Decode(k)
+			mpkey[dk] = prikeymap[dk]
+		}
+		pk := prikeymap[Decode(s.HeadPrikey)]
+		c := NewLoadChunk(
+			hs,
+			mpkey,
+			ncp,
+			npp,
+			&pk,
+		)
+		resultmap[hs] = c
+		return &c
+	}
+}
+
+func LoadTree(b []byte) ProllyTree {
+	var s treeSaver
+	json.Unmarshal(b, &s)
+	tree := make([]map[ChunkAddress]Chunk, 0)
+	headchunks := make([]Chunk, 0)
+	for index, headChunkaddr := range s.Heads {
+		pkeymap := make(map[ChunkAddress]PriKey, len(s.Pkeys[index]))
+		eleintree := make(map[ChunkAddress]Chunk, len(s.Tree[index]))
+		pkeyhash_encpkey := s.Pkeys[index]
+		for _, pkeyenc := range pkeyhash_encpkey {
+			loadPrikey(pkeyenc, pkeyhash_encpkey, pkeymap)
+		}
+		Chunkaddr_encChunk := s.Tree[index]
+		for Chunkaddr, encChunk := range Chunkaddr_encChunk {
+			eleintree[Decode(Chunkaddr)] = *(loadChunk(encChunk, pkeymap, Chunkaddr_encChunk, eleintree))
+		}
+		tree = append(tree, eleintree)
+		headchunks = append(headchunks, eleintree[Decode(headChunkaddr)])
+	}
+	p := NewLoadProllyTree(
+		tree,
+		headchunks,
+		s.Lastid,
+	)
+	return p
+}
+
 func check(e error) {
 	if e != nil {
 		panic(e)

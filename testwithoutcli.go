@@ -18,6 +18,9 @@ func check(e error) {
 		panic(e)
 	}
 }
+func main() {
+	Test1()
+}
 func Test1() {
 
 	db_name := "testt"

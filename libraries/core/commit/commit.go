@@ -1,7 +1,7 @@
 package commit
 
 import (
-	// . "Digit/libraries/core/dataloader"
+	. "Digit/libraries/core/dataloader"
 	"Digit/libraries/core/diff"
 	"sort"
 	"time"
@@ -41,7 +41,9 @@ func (cg *CommitGraph) SetHead(hash string) {
 // new commit
 func (cg *CommitGraph) NewCommit(time time.Time, author string, hash string, value diff.ProllyTree, message string) {
 	copyprollytree := value
-	// SaveTree(value)
+
+	copyprollytree = LoadTree(SaveTree(value))
+
 	node := Commit{
 		Time:    time,
 		Author:  author,
