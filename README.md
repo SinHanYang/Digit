@@ -1,5 +1,9 @@
 # Digit
 
+## Concepts
+
+Here is our report of Digit: https://docs.google.com/document/d/1g7YeATxRtSnpZQw8roqUBm9e1ZnmsCmPhwIqURbqOFA/edit?usp=sharing
+
 ## Installation
 
 This is an example of how you may give instructions on setting up your project locally. To get a local copy up and running follow these simple example steps.
